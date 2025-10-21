@@ -39,5 +39,8 @@ print(7)
 ```{r}
 'The capital of california is Sacramento'
 37**2
+
+'The capital of Cameroon is Yaoundé'
+55*9
 ```
 
