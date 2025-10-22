@@ -50,5 +50,61 @@ view(gen_ineq)
 plot(paices)
 ```
 ```{r}
+print('Okay, I see that in the paices data I want to remove antarctica because it is massive
+      and in the gen_ineq I want to select only the columns containing country name,
+      gii_2010 and gii_2019')
+
+solo_paices <- paices %>% filter(COUNTRYAFF != 'AQ')
+view(solo_paices)
+
+gen_ineq2 <- gen_ineq %>% 
+  select(any_of(c('country', 'gii_2010', 'gii_2019', 'iso3'))) 
+view(gen_ineq2)
+plot(solo_paices)
+```
+
+```{r}
+print("Now I want to take the difference of the 2010 and 2019 gender inequality values
+      A quick inspection of the table shows that the 2010 values are generally higher so 
+      I will do (2010 value - 2019 value)")
+
+gen_ineq_diff <- gen_ineq2 %>%
+  mutate(
+    gii_2010 = as.numeric(gii_2010),
+    gii_2019 = as.numeric(gii_2019),
+    difference = gii_2010 - gii_2019)
+view(gen_ineq_diff)
+```
+
+```{r}
+print("Alrighty it looks like imma have to work some magic to attain a key field in both
+      datasets to execute a join. Let's investigate the countrycode package that Andy suggests")
+print("Run this code [install.packages('countrycode')] in the console to install the package")
+library(countrycode)
+
+print('I am going to change the ISO3 values in gen_ineq_diff into ISO2 values similar to those in
+      the solo_paices data')
+
+gen_ineq_diff <- gen_ineq_diff %>%
+  mutate(iso2 = countrycode(iso3, origin = 'iso3c', destination = 'iso2c'))
+view(gen_ineq_diff)
+```
+
+```{r}
+print("Badabing badaboom let's get crackalackin with the last bit of code now. I want to join
+      the two datasets with the new columns that I have made!!")
+
+gen_ineq_paices <- left_join(gen_ineq_diff, solo_paices, by = c('iso2' = 'ISO'))
+view(gen_ineq_paices)
+```
+
+```{r}
+print("SPECTACULAR! Now I want to clean up the final dataset so it is more easy to read")
+
+gen_ineq_paices <- gen_ineq_paices %>%
+  select(any_of(c('COUNTRY', 'gii_2010', 'gii_2019', 'difference', 'iso2', 
+                  'geometry'))) %>%
+  clean_names()
+view(gen_ineq_diff)
 ```
 
