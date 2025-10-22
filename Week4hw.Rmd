@@ -2,7 +2,9 @@
 title: "Week4hw"
 author: "Owen Hughes"
 date: "2025-10-22"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
