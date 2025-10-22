@@ -38,6 +38,11 @@ library(here)
 library(janitor)
 library(tidyverse)
 ```
+
+
+```{r}
+library(ggplot2)
+```
 ```{r}
 print("Let's read these files")
 gen_ineq <- st_read(here('HDR25_Composite_indices_complete_time_series.csv'))
@@ -94,17 +99,52 @@ view(gen_ineq_diff)
 print("Badabing badaboom let's get crackalackin with the last bit of code now. I want to join
       the two datasets with the new columns that I have made!!")
 
-gen_ineq_paices <- left_join(gen_ineq_diff, solo_paices, by = c('iso2' = 'ISO'))
+gen_ineq_paices <- left_join(solo_paices, gen_ineq_diff, by = c('ISO' = 'iso2'))
 view(gen_ineq_paices)
 ```
 
 ```{r}
 print("SPECTACULAR! Now I want to clean up the final dataset so it is more easy to read")
 
-gen_ineq_paices <- gen_ineq_paices %>%
+gen_ineq_paices2 <- gen_ineq_paices %>%
   select(any_of(c('COUNTRY', 'gii_2010', 'gii_2019', 'difference', 'iso2', 
                   'geometry'))) %>%
   clean_names()
-view(gen_ineq_diff)
+view(gen_ineq_paices2)
+```
+
+```{r}
+print("Alright I just realized that there are regions included in this data like sub-saharan africa,
+      let's remove those. I am going to filter all the areas without and ISO2 value")
+
+print('gen_ineq_paices2 <- gen_ineq_paices2 %>%
+  filter(!is.na(iso2))
+view(gen_ineq_paices2)
+plot(st_geometry(gen_ineq_paices2))')
+
+## I switched the order of the join dataframes to mainetain the geometry so this is pointless
+## good to know tho
+```
+```{r}
+plot(gen_ineq_paices2)
+```
+
+```{r}
+print('Alrighty I want to make a choropleth map of the difference in gender inquality by country!')
+
+gen_ineq_map <- ggplot(gen_ineq_paices2) +
+  geom_sf(aes(fill = difference), color = '#F0EAD6', size = 0.1) +
+  scale_fill_gradient2(
+    low = '#3c0008', mid = '#cc7070', high = '#ff69b4',
+    midpoint = 0.1,
+    name = "[2010-2019] GII"
+  ) +
+  theme_minimal() +
+  labs(
+    title = 'Difference in Gender Inequality Between 2019 and 2010',
+    subtitle = 'Higher Numbers = Gender Equality Gains',
+  )
+
+plot(gen_ineq_map)
 ```
 
