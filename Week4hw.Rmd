@@ -124,7 +124,7 @@ print('gen_ineq_paices2 <- gen_ineq_paices2 %>%
 view(gen_ineq_paices2)
 plot(st_geometry(gen_ineq_paices2))')
 
-## I switched the order of the join dataframes to mainetain the geometry so this is pointless
+## I switched the order of the join data frames to maintain the geometry so this is pointless
 ## good to know tho
 ```
 ```{r}
