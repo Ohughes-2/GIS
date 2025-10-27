@@ -11,23 +11,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
@@ -39,6 +22,7 @@ library(sf)
 library(here)
 library(janitor)
 library(tidyverse)
+library(tmap)
 ```
 
 
@@ -148,5 +132,22 @@ gen_ineq_map <- ggplot(gen_ineq_paices2) +
   )
 
 plot(gen_ineq_map)
+```
+
+```{r}
+tmap_mode('view')
+gen_ineq_tmap <- tm_shape(gen_ineq_paices2) + 
+  tm_polygons(fill = "difference", 
+              fill.scale = tm_scale(
+                            values = c('#3c0008', '#cc7070', '#ff69b4'),   
+                            midpoint = 0.1), 
+              fill_alpha = 0.8, 
+              fill.legend = tm_legend(title = "[2010-2019] GII")) + 
+  tm_title("Difference in Gender Inequality Index from 2010–2019") + 
+  tm_credits( "Source: UN Human Development Reports", position = c("left", "bottom")) +
+  tm_scalebar(position = c("left", "bottom")) +
+  tm_view(set_view = c(0, 20, 1.4)) 
+
+gen_ineq_tmap
 ```
 
