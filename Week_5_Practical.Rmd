@@ -1,0 +1,291 @@
+---
+title: "Week_5_Practical"
+author: "Owen Hughes"
+date: "2025-10-28"
+output:
+  pdf_document: default
+  html_document: default
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+__Alright so today I want to make a few maps showing the amount of hotels and airbnbs in various London boroughs__
+```{r}
+print("load libraries")
+
+library(sf)
+library(here)
+library(janitor)
+library(tidyverse)
+library(tmap)
+library(ggplot2)
+```
+__Right, the specific goal is to make one map showing the hotels in each London borough with some context, and then another map of the same size and legend showing airbnbs and its own context__
+
+Okay for the hotel and airbnb maps I will have the boroughs as a shape file, hotels as a shape file, and airbnbs as a csv. I want to put all of these in the same crs so that they can be joined later. 
+
+To attain the correct information, I will have to filter hotels from the larger Ldn data, and filter entire home and apartments available for 365 days a year for the airbnb data. 
+```{r}
+print("Time to Load data")
+
+# for the hotel data 
+OSM <- st_read(here("Week_5/Data/Ldn_data/gis_osm_pois_free_1.shp"))%>%
+  st_transform(., 27700) %>%
+  #select hotels only
+  filter(fclass == 'hotel')
+```
+```{r}
+print("Time to Load data")
+
+# for the airbnb data
+Airbnb <- read_csv(here("Week_5/Data/listings.csv")) %>%
+  # longitude is considered x value here, latitude is y
+  st_as_sf(., coords = c("longitude", "latitude"), 
+                   crs = 4326) %>%
+    st_transform(., 27700)%>%
+    #select entire places that are available all year
+    filter(room_type == 'Entire home/apt' & availability_365 =='365')
+```
+```{r}
+print("Time to Load data")
+
+# For the London Boroughs
+Londonborough <- st_read(here("Week_5/Data/statistical-gis-boundaries-london/ESRI/London_Borough_Excluding_MHW.shp"))%>%
+  st_transform(., 27700)
+```
+For now I am going to skip the download for the inset map of the UK because the data download is not functioning correctly
+
+__Now it is time to start working on the join of the data sets__
+
+this is how it's done with st_join
+```{r}
+print("Perform a left join with st_join")
+
+Hotels <-  st_join(Londonborough, OSM)
+
+Airbnbs <-  st_join(Londonborough, Airbnb)
+
+head(Hotels)
+view(Hotels)
+view(Airbnbs)
+```
+Right we can see that each hotel and airbnb in each borough becomes a new row of the data set.
+
+__In order to arrange the data so that each row is a single borough with all of its hotels or airbnbs, we can use the group_by and summarize functions__
+
+```{r}
+print("Use group by and summarise")
+
+Hotels_sum <- Hotels %>%
+  # we need to list the columns we want to keep in the summarise
+  group_by(., GSS_CODE, NAME)%>%
+  # for each group count the number of rows and store in a column called accomodation count.
+  summarise(`Accomodation count` = n())
+
+Airbnb_sum <- Airbnbs %>%
+  group_by(., GSS_CODE, NAME)%>%
+  summarise(`Accomodation count` = n())
+
+view(Hotels_sum)
+view(Airbnb_sum)
+
+print("The data has been arranges correctly now")
+```
+
+__The st_join retains the geometry of the input data set so that even when there is no hotel or airbnb in a borough, the geometry will still appear__
+```{r}
+print("Check and area with no hotels / airbnbs")
+
+Hotels %>%
+  filter(NAME=="Barking and Dagenham")
+
+Hotels_sum %>%
+  filter(NAME=="Barking and Dagenham")
+```
+__The problem is, Barking and Dagenham returns a value of 1 when there is in fact, no hotel in the area. We can use a topological relationship instead of an st_join to remedy this__
+
+This way, a count of points inside each polygon is created rather than a join of the spatial layers
+```{r}
+print("Topological realtionship with hotels")
+Hotels_example <-st_contains(Londonborough, OSM)
+
+Hotels_example
+```
+```{r}
+print("Find the length of of the list of hotels (features contained in each borough) to get the total")
+
+Accomodation_contained <- Londonborough%>%
+  mutate(hotels_n = lengths(st_contains(., OSM)))%>%
+  mutate(airbnbs_n = lengths(st_contains(., Airbnbs)))
+
+```
+__Now I can check to see that Bexley returns a value of 0 no 1__
+
+```{r}
+print("Check Bexley")
+Accomodation_contained %>%
+  filter(NAME=="Bexley")
+```
+__Alright, now that the joins have been completed successfully, I can start thinking about mapping the data__ 
+
+Tmap will be used in this practical over ggplot as it is designed specifically for spatial data
+
+```{r}
+print("Start the Tmap")
+
+# standard map --> as opposed to interactive
+tmap_mode("plot")
+
+tm1 <- tm_shape(Accomodation_contained) + 
+  tm_polygons("hotels_n",
+              col = "#7f1734", lwd=0.5, lty="dashed",)
+
+tm1
+```
+
+This would be the map with no spatial data
+```{r}
+print("plain map")
+
+tm_no_map_layer <- tm_shape(Accomodation_contained) + 
+  # there is no tm_polygons() if we just want the map with no spatial data
+  tm_borders(col = "#7f1734")
+
+tm_no_map_layer
+```
+
+In order to add more information to the map, one simply builds off og the tm1 variable already set
+
+I am going to add a _Violin Plot, Color Scheme, Separation Method (jenks)_
+```{r}
+print("Make some additions")
+
+tmap_mode("plot")
+
+tm1 <- tm_shape(Accomodation_contained) + 
+  tm_polygons(fill ="hotels_n",
+              col = "black", 
+              lwd =0.5,
+              lty="dashed",
+              fill.chart = tm_chart_violin(),
+              # above this was the same as before
+              fill.scale = tm_scale_intervals(
+                values="brewer.bu_pu",
+                n=5,
+                style="jenks"))
+
+tm1
+```
+What if I wanted to see all the possible options for color schemes?
+
+```{r}
+#install.packages("colorblindcheck")
+# install.packages("shiny")
+#install.packages(c("shinyjs", "kableExtra"))
+library(colorblindcheck)
+cols4all::c4a_gui()
+```
+
+__Right! Now that we have used jenks with the hotel data, we need to use the same intervals for the airbnb data so that the two maps can be comparable__
+
+This means I am going to make custom breaks in the data --> I will derive jenks data for airbnbs and then apply it to hotels
+
+```{r}
+print("Sumamry of data")
+
+stats <- Accomodation_contained %>%
+  st_drop_geometry() %>%
+  dplyr::select(hotels_n, airbnbs_n) %>%  
+  summarise(across(everything(), list(
+    min = min,
+    max = max,
+    mean = mean,
+    median = median,
+    sd = sd
+  )))
+```
+Airbnbs have the largest range so I will use the airbnbs to derive my data breaks
+
+```{r}
+print("derive airbnb jenks")
+
+library(classInt)
+
+breaks <- Accomodation_contained%>%
+  st_drop_geometry()%>%
+  #need a numeric vector not a dataframe or tibble
+  pull(airbnbs_n) %>%             
+  classIntervals(., n = 5, style = "jenks")
+  
+breaks$brks
+```
+__Now that I have my breaks, I am going to use a facet map to insets two maps into the same figure__
+```{r}
+print("Produce a facet map")
+
+tm1 <- tm_shape(Accomodation_contained) +
+    tm_polygons(
+      fill = c("hotels_n", "airbnbs_n"),
+      fill.scale = tm_scale_intervals(values = "brewer.blues", breaks=breaks$brks),
+      # set the legend
+      fill.legend = tm_legend(title="Accomodation count",
+                              title.size=0.85,
+                              size=0.8,
+                              # plot outside of the main map
+                              #explained below
+                              position=tm_pos_out("right", 
+                                                  "center",
+                                                  pos.v = "center")),
+      # all facets share the same legend
+      fill.free = FALSE)+
+  # make 2 rows for the facets
+  tm_facets(nrow=2)
+
+tm1
+```
+
+__Now for the final map I want to _alter the layout and add a compass, scale bar, and north arrow_. Here is how to do that__
+```{r}
+print("produce final map")
+
+tm2 <- tm1+
+  tm_layout(panel.labels=c("Hotels", "Airbnb"),
+            panel.show = TRUE
+            #panel.label.bg.color = "transparent",
+            )+
+  
+  tm_compass(type= "arrow",
+            size=1.8, 
+            position = tm_pos_out("left", 
+                                  "center",
+                                  pos.h= -0.05,
+                                  pos.v =0.72))+
+  tm_scalebar(text.size = 0.7,
+              width=10,
+              breaks=c(0,10,20),
+              position = tm_pos_out("left",
+                                    "center", 
+                                    pos.h=0.075,
+                                    pos.v = 0.68))+
+  # we could use tm_credits to place sub-titles like (A) or (B)
+  # on the map.
+  tm_credits("(c) OpenStreetMap contrbutors and Air b n b",
+             size=0.6,
+             position = tm_pos_out("center",
+                                   "bottom",
+                                   pos.v = 1.5,
+                                   pos.h=-0.02))
+
+tm2
+```
+
+__Now I want to save the figure above__
+```{r}
+print("Save Map")
+
+tmap_save(tm2, "Outputs/1_facet.png", width = 8, height = 6, units="in", dpi = 300)
+```
+__Usually for this practical one would add the inset map of the UK to show the study area, but that data download was not working so I will skip this step this week.__

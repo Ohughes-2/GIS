@@ -1,0 +1,910 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Week\_5\_Practical},
+  pdfauthor={Owen Hughes},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Week\_5\_Practical}
+\author{Owen Hughes}
+\date{2025-10-28}
+
+\begin{document}
+\maketitle
+
+\textbf{Alright so today I want to make a few maps showing the amount of
+hotels and airbnbs in various london boroughs}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"load libraries"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "load libraries"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(sf)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Linking to GEOS 3.13.1, GDAL 3.11.0, PROJ 9.6.0; sf_use_s2() is TRUE
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(here)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## here() starts at C:/Users/Owen Hughes/Desktop/CASA/UCL_Work/GIS_Term1/GIS_Git_Projects/Week_5/GIS
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(janitor)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'janitor'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:stats':
+## 
+##     chisq.test, fisher.test
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tidyverse)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## -- Attaching core tidyverse packages ------------------------ tidyverse 2.0.0 --
+## v dplyr     1.1.4     v readr     2.1.5
+## v forcats   1.0.1     v stringr   1.5.2
+## v ggplot2   4.0.0     v tibble    3.3.0
+## v lubridate 1.9.4     v tidyr     1.3.1
+## v purrr     1.1.0
+\end{verbatim}
+
+\begin{verbatim}
+## -- Conflicts ------------------------------------------ tidyverse_conflicts() --
+## x dplyr::filter() masks stats::filter()
+## x dplyr::lag()    masks stats::lag()
+## i Use the conflicted package (<http://conflicted.r-lib.org/>) to force all conflicts to become errors
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(tmap)}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Right, the specific goal is to make one map showing the hotels
+in each London borough with some context, and then another map of the
+same size and legend showing airbnbs and its own context}
+
+Okay for the hotel and airbnb maps I will have the boroughs as a shape
+file, hotels as a shape file, and airbnbs as a csv. I want to put all of
+these in the same crs so that they can be joined later.
+
+To attain the correct information, I will have to filter hotels from the
+larger Ldn data, and filter entire home and apartments available for 365
+days a year for the airbnb data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Time to Load data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Time to Load data"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# for the hotel data }
+\NormalTok{OSM }\OtherTok{\textless{}{-}} \FunctionTok{st\_read}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"Week\_5/Data/Ldn\_data/gis\_osm\_pois\_free\_1.shp"}\NormalTok{))}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{st\_transform}\NormalTok{(., }\DecValTok{27700}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\#select hotels only}
+  \FunctionTok{filter}\NormalTok{(fclass }\SpecialCharTok{==} \StringTok{\textquotesingle{}hotel\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Reading layer `gis_osm_pois_free_1' from data source 
+##   `C:\Users\Owen Hughes\Desktop\CASA\UCL_Work\GIS_Term1\GIS_Git_Projects\Week_5\GIS\Week_5\Data\Ldn_data\gis_osm_pois_free_1.shp' 
+##   using driver `ESRI Shapefile'
+## Simple feature collection with 97061 features and 4 fields
+## Geometry type: POINT
+## Dimension:     XY
+## Bounding box:  xmin: -0.5120832 ymin: 51.28679 xmax: 0.3094684 ymax: 51.6902
+## Geodetic CRS:  WGS 84
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Time to Load data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Time to Load data"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# for the airbnb data}
+\NormalTok{Airbnb }\OtherTok{\textless{}{-}} \FunctionTok{read\_csv}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"Week\_5/Data/listings.csv"}\NormalTok{)) }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# longitude is considered x value here, latitude is y}
+  \FunctionTok{st\_as\_sf}\NormalTok{(., }\AttributeTok{coords =} \FunctionTok{c}\NormalTok{(}\StringTok{"longitude"}\NormalTok{, }\StringTok{"latitude"}\NormalTok{), }
+                   \AttributeTok{crs =} \DecValTok{4326}\NormalTok{) }\SpecialCharTok{\%\textgreater{}\%}
+    \FunctionTok{st\_transform}\NormalTok{(., }\DecValTok{27700}\NormalTok{)}\SpecialCharTok{\%\textgreater{}\%}
+    \CommentTok{\#select entire places that are available all year}
+    \FunctionTok{filter}\NormalTok{(room\_type }\SpecialCharTok{==} \StringTok{\textquotesingle{}Entire home/apt\textquotesingle{}} \SpecialCharTok{\&}\NormalTok{ availability\_365 }\SpecialCharTok{==}\StringTok{\textquotesingle{}365\textquotesingle{}}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Rows: 96651 Columns: 18
+## -- Column specification --------------------------------------------------------
+## Delimiter: ","
+## chr   (4): name, host_name, neighbourhood, room_type
+## dbl  (11): id, host_id, latitude, longitude, price, minimum_nights, number_o...
+## lgl   (2): neighbourhood_group, license
+## date  (1): last_review
+## 
+## i Use `spec()` to retrieve the full column specification for this data.
+## i Specify the column types or set `show_col_types = FALSE` to quiet this message.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Time to Load data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Time to Load data"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# For the London Boroughs}
+\NormalTok{Londonborough }\OtherTok{\textless{}{-}} \FunctionTok{st\_read}\NormalTok{(}\FunctionTok{here}\NormalTok{(}\StringTok{"Week\_5/Data/statistical{-}gis{-}boundaries{-}london/ESRI/London\_Borough\_Excluding\_MHW.shp"}\NormalTok{))}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{st\_transform}\NormalTok{(., }\DecValTok{27700}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Reading layer `London_Borough_Excluding_MHW' from data source 
+##   `C:\Users\Owen Hughes\Desktop\CASA\UCL_Work\GIS_Term1\GIS_Git_Projects\Week_5\GIS\Week_5\Data\statistical-gis-boundaries-london\ESRI\London_Borough_Excluding_MHW.shp' 
+##   using driver `ESRI Shapefile'
+## Simple feature collection with 33 features and 7 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 503568.2 ymin: 155850.8 xmax: 561957.5 ymax: 200933.9
+## Projected CRS: OSGB36 / British National Grid
+\end{verbatim}
+
+For now I am going to skip the download for the inset map of the UK
+because the data download is not functioning correctly
+
+\textbf{Now it is time to start working on the join of the data sets}
+
+this is how it's done with st\_join
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Perform a left join with st\_join"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Perform a left join with st_join"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Hotels }\OtherTok{\textless{}{-}}  \FunctionTok{st\_join}\NormalTok{(Londonborough, OSM)}
+
+\NormalTok{Airbnbs }\OtherTok{\textless{}{-}}  \FunctionTok{st\_join}\NormalTok{(Londonborough, Airbnb)}
+
+\FunctionTok{head}\NormalTok{(Hotels)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Simple feature collection with 6 features and 11 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 516362.6 ymin: 155850.8 xmax: 539657.9 ymax: 172367
+## Projected CRS: OSGB36 / British National Grid
+##                     NAME  GSS_CODE HECTARES NONLD_AREA ONS_INNER SUB_2009
+## 1   Kingston upon Thames E09000021 3726.117          0         F     <NA>
+## 1.1 Kingston upon Thames E09000021 3726.117          0         F     <NA>
+## 1.2 Kingston upon Thames E09000021 3726.117          0         F     <NA>
+## 1.3 Kingston upon Thames E09000021 3726.117          0         F     <NA>
+## 1.4 Kingston upon Thames E09000021 3726.117          0         F     <NA>
+## 2                Croydon E09000008 8649.441          0         F     <NA>
+##     SUB_2006      osm_id code fclass                             name
+## 1       <NA>   387544035 2401  hotel             Bosco Hotel & Lounge
+## 1.1     <NA>  1729750835 2401  hotel                       Travelodge
+## 1.2     <NA>  4002880204 2401  hotel                      Premier Inn
+## 1.3     <NA>  5955546285 2401  hotel The Bull and Bush Hotel Kingston
+## 1.4     <NA> 12167570871 2401  hotel                       Travelodge
+## 2       <NA>  5308320604 2401  hotel    easyHotel Croydon Town Centre
+##                           geometry
+## 1   MULTIPOLYGON (((516401.6 16...
+## 1.1 MULTIPOLYGON (((516401.6 16...
+## 1.2 MULTIPOLYGON (((516401.6 16...
+## 1.3 MULTIPOLYGON (((516401.6 16...
+## 1.4 MULTIPOLYGON (((516401.6 16...
+## 2   MULTIPOLYGON (((535009.2 15...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{view}\NormalTok{(Hotels)}
+\FunctionTok{view}\NormalTok{(Airbnbs)}
+\end{Highlighting}
+\end{Shaded}
+
+Right we can see that each hotel and airbnb in each borough becomes a
+new row of the data set.
+
+\textbf{In order to arrange the data so that each row is a single
+borough with all of its hotels or airbnbs, we can use the group\_by and
+summarize functions}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Use group by and summarise"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Use group by and summarise"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Hotels\_sum }\OtherTok{\textless{}{-}}\NormalTok{ Hotels }\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# we need to list the columns we want to keep in the summarise}
+  \FunctionTok{group\_by}\NormalTok{(., GSS\_CODE, NAME)}\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\# for each group count the number of rows and store in a column called accomodation count.}
+  \FunctionTok{summarise}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Accomodation count}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{n}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'GSS_CODE'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Airbnb\_sum }\OtherTok{\textless{}{-}}\NormalTok{ Airbnbs }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{group\_by}\NormalTok{(., GSS\_CODE, NAME)}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{summarise}\NormalTok{(}\StringTok{\textasciigrave{}}\AttributeTok{Accomodation count}\StringTok{\textasciigrave{}} \OtherTok{=} \FunctionTok{n}\NormalTok{())}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## `summarise()` has grouped output by 'GSS_CODE'. You can override using the
+## `.groups` argument.
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{view}\NormalTok{(Hotels\_sum)}
+\FunctionTok{view}\NormalTok{(Airbnb\_sum)}
+
+\FunctionTok{print}\NormalTok{(}\StringTok{"The data has been arranges correctly now"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "The data has been arranges correctly now"
+\end{verbatim}
+
+\textbf{The st\_join retains the geometry of the input data set so that
+even when there is no hotel or airbnb in a borough, the geometry will
+still appear}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Check and area with no hotels / airbnbs"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Check and area with no hotels / airbnbs"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Hotels }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(NAME}\SpecialCharTok{==}\StringTok{"Barking and Dagenham"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Simple feature collection with 1 feature and 11 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 543417.3 ymin: 181434.1 xmax: 551944.6 ymax: 191137.3
+## Projected CRS: OSGB36 / British National Grid
+##                    NAME  GSS_CODE HECTARES NONLD_AREA ONS_INNER SUB_2009
+## 32 Barking and Dagenham E09000002 3779.934     169.15         F     <NA>
+##    SUB_2006     osm_id code fclass               name
+## 32     <NA> 9090311683 2401  hotel Barking Park Hotel
+##                          geometry
+## 32 MULTIPOLYGON (((543905.4 18...
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Hotels\_sum }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(NAME}\SpecialCharTok{==}\StringTok{"Barking and Dagenham"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Simple feature collection with 1 feature and 3 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 543417.3 ymin: 181434.1 xmax: 551944.6 ymax: 191137.3
+## Projected CRS: OSGB36 / British National Grid
+## # A tibble: 1 x 4
+## # Groups:   GSS_CODE [1]
+##   GSS_CODE  NAME                 `Accomodation count`                   geometry
+## * <chr>     <chr>                               <int>         <MULTIPOLYGON [m]>
+## 1 E09000002 Barking and Dagenham                    1 (((543905.4 183199.1, 543~
+\end{verbatim}
+
+\textbf{The problem is, Barking and Dagenham returns a value of 1 when
+there is in fact, no hotel in the area. We can use a topological
+relationship instead of an st\_join to remedy this}
+
+This way, a count of points inside each polygon is created rather than a
+join of the spatial layers
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Topological realtionship with hotels"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Topological realtionship with hotels"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Hotels\_example }\OtherTok{\textless{}{-}}\FunctionTok{st\_contains}\NormalTok{(Londonborough, OSM)}
+
+\NormalTok{Hotels\_example}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Sparse geometry binary predicate list of length 33, where the predicate
+## was `contains'
+## first 10 elements:
+##  1: 35, 105, 157, 221, 321
+##  2: 213, 223
+##  3: 1, 42, 214, 258, 267, 316
+##  4: 7, 82, 115, 246, 252, 274
+##  5: 39, 239, 250, 254, 291, 320
+##  6: 110, 188, 215, 216, 217, 253, 319
+##  7: 65, 158, 185, 225, 226, 227, 228, 255
+##  8: 145, 162
+##  9: 38, 125, 138, 151, 192, 194, 237, 322, 340
+##  10: 93, 108, 220, 270, 288
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Find the length of of the list of hotels (features contained in each borough) to get the total"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Find the length of of the list of hotels (features contained in each borough) to get the total"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Accomodation\_contained }\OtherTok{\textless{}{-}}\NormalTok{ Londonborough}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{hotels\_n =} \FunctionTok{lengths}\NormalTok{(}\FunctionTok{st\_contains}\NormalTok{(., OSM)))}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{mutate}\NormalTok{(}\AttributeTok{airbnbs\_n =} \FunctionTok{lengths}\NormalTok{(}\FunctionTok{st\_contains}\NormalTok{(., Airbnbs)))}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Now I can check to see that Bexley returns a value of 0 no 1}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Check Bexley"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Check Bexley"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{Accomodation\_contained }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{filter}\NormalTok{(NAME}\SpecialCharTok{==}\StringTok{"Bexley"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Simple feature collection with 1 feature and 9 fields
+## Geometry type: MULTIPOLYGON
+## Dimension:     XY
+## Bounding box:  xmin: 544314.9 ymin: 169908.2 xmax: 554089.2 ymax: 181521.8
+## Projected CRS: OSGB36 / British National Grid
+##     NAME  GSS_CODE HECTARES NONLD_AREA ONS_INNER SUB_2009 SUB_2006
+## 1 Bexley E09000004 6428.649    370.619         F     <NA>     <NA>
+##                         geometry hotels_n airbnbs_n
+## 1 MULTIPOLYGON (((547226.2 18...        0        39
+\end{verbatim}
+
+\textbf{Alright, now that the joins have been completed successfully, I
+can start thinking about mapping the data}
+
+Tmap will be used in this practical over ggplot as it is designed
+specifically for spatial data
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Start the Tmap"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Start the Tmap"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# standard map {-}{-}\textgreater{} as opposed to interactive}
+\FunctionTok{tmap\_mode}\NormalTok{(}\StringTok{"plot"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## i tmap modes "plot" - "view"
+## i toggle with `tmap::ttm()`
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tm1 }\OtherTok{\textless{}{-}} \FunctionTok{tm\_shape}\NormalTok{(Accomodation\_contained) }\SpecialCharTok{+} 
+  \FunctionTok{tm\_polygons}\NormalTok{(}\StringTok{"hotels\_n"}\NormalTok{,}
+              \AttributeTok{col =} \StringTok{"\#7f1734"}\NormalTok{, }\AttributeTok{lwd=}\FloatTok{0.5}\NormalTok{, }\AttributeTok{lty=}\StringTok{"dashed"}\NormalTok{,)}
+
+\NormalTok{tm1}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Week_5_Practical_files/figure-latex/unnamed-chunk-11-1.pdf}}
+
+This would be the map with no spatial data
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"plain map"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "plain map"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tm\_no\_map\_layer }\OtherTok{\textless{}{-}} \FunctionTok{tm\_shape}\NormalTok{(Accomodation\_contained) }\SpecialCharTok{+} 
+  \CommentTok{\# there is no tm\_polygons() if we just want the map with no spatial data}
+  \FunctionTok{tm\_borders}\NormalTok{(}\AttributeTok{col =} \StringTok{"\#7f1734"}\NormalTok{)}
+
+\NormalTok{tm\_no\_map\_layer}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Week_5_Practical_files/figure-latex/unnamed-chunk-12-1.pdf}}
+
+In order to add more information to the map, one simply builds off og
+the tm1 variable already set
+
+I am going to add a \emph{Violin Plot, Color Scheme, Separation Method
+(jenks)}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Make some additions"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Make some additions"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{tmap\_mode}\NormalTok{(}\StringTok{"plot"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## i tmap modes "plot" - "view"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tm1 }\OtherTok{\textless{}{-}} \FunctionTok{tm\_shape}\NormalTok{(Accomodation\_contained) }\SpecialCharTok{+} 
+  \FunctionTok{tm\_polygons}\NormalTok{(}\AttributeTok{fill =}\StringTok{"hotels\_n"}\NormalTok{,}
+              \AttributeTok{col =} \StringTok{"black"}\NormalTok{, }
+              \AttributeTok{lwd =}\FloatTok{0.5}\NormalTok{,}
+              \AttributeTok{lty=}\StringTok{"dashed"}\NormalTok{,}
+              \AttributeTok{fill.chart =} \FunctionTok{tm\_chart\_violin}\NormalTok{(),}
+              \CommentTok{\# above this was the same as before}
+              \AttributeTok{fill.scale =} \FunctionTok{tm\_scale\_intervals}\NormalTok{(}
+                \AttributeTok{values=}\StringTok{"brewer.bu\_pu"}\NormalTok{,}
+                \AttributeTok{n=}\DecValTok{5}\NormalTok{,}
+                \AttributeTok{style=}\StringTok{"jenks"}\NormalTok{))}
+
+\NormalTok{tm1}
+\end{Highlighting}
+\end{Shaded}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Week_5_Practical_files/figure-latex/unnamed-chunk-13-1.pdf}}
+What if I wanted to see all the possible options for color schemes?
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#install.packages("colorblindcheck")}
+\CommentTok{\# install.packages("shiny")}
+\CommentTok{\#install.packages(c("shinyjs", "kableExtra"))}
+\FunctionTok{library}\NormalTok{(colorblindcheck)}
+\NormalTok{cols4all}\SpecialCharTok{::}\FunctionTok{c4a\_gui}\NormalTok{()}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{Right! Now that we have used jenks with the hotel data, we need
+to use the same intervals for the airbnb data so that the two maps can
+be comparable}
+
+This means I am going to make custom breaks in the data --\textgreater{}
+I will derive jenks data for airbnbs and then apply it to hotels
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Sumamry of data"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Sumamry of data"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{stats }\OtherTok{\textless{}{-}}\NormalTok{ Accomodation\_contained }\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{st\_drop\_geometry}\NormalTok{() }\SpecialCharTok{\%\textgreater{}\%}
+\NormalTok{  dplyr}\SpecialCharTok{::}\FunctionTok{select}\NormalTok{(hotels\_n, airbnbs\_n) }\SpecialCharTok{\%\textgreater{}\%}  
+  \FunctionTok{summarise}\NormalTok{(}\FunctionTok{across}\NormalTok{(}\FunctionTok{everything}\NormalTok{(), }\FunctionTok{list}\NormalTok{(}
+    \AttributeTok{min =}\NormalTok{ min,}
+    \AttributeTok{max =}\NormalTok{ max,}
+    \AttributeTok{mean =}\NormalTok{ mean,}
+    \AttributeTok{median =}\NormalTok{ median,}
+    \AttributeTok{sd =}\NormalTok{ sd}
+\NormalTok{  )))}
+\end{Highlighting}
+\end{Shaded}
+
+Airbnbs have the largest range so I will use the airbnbs to derive my
+data breaks
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"derive airbnb jenks"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "derive airbnb jenks"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(classInt)}
+
+\NormalTok{breaks }\OtherTok{\textless{}{-}}\NormalTok{ Accomodation\_contained}\SpecialCharTok{\%\textgreater{}\%}
+  \FunctionTok{st\_drop\_geometry}\NormalTok{()}\SpecialCharTok{\%\textgreater{}\%}
+  \CommentTok{\#need a numeric vector not a dataframe or tibble}
+  \FunctionTok{pull}\NormalTok{(airbnbs\_n) }\SpecialCharTok{\%\textgreater{}\%}             
+  \FunctionTok{classIntervals}\NormalTok{(., }\AttributeTok{n =} \DecValTok{5}\NormalTok{, }\AttributeTok{style =} \StringTok{"jenks"}\NormalTok{)}
+  
+\NormalTok{breaks}\SpecialCharTok{$}\NormalTok{brks}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1]   4  22  45  68 122 253
+\end{verbatim}
+
+\textbf{Now that I have my breaks, I am going to use a facet map to
+insets two maps into the same figure}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Produce a facet map"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Produce a facet map"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tm1 }\OtherTok{\textless{}{-}} \FunctionTok{tm\_shape}\NormalTok{(Accomodation\_contained) }\SpecialCharTok{+}
+    \FunctionTok{tm\_polygons}\NormalTok{(}
+      \AttributeTok{fill =} \FunctionTok{c}\NormalTok{(}\StringTok{"hotels\_n"}\NormalTok{, }\StringTok{"airbnbs\_n"}\NormalTok{),}
+      \AttributeTok{fill.scale =} \FunctionTok{tm\_scale\_intervals}\NormalTok{(}\AttributeTok{values =} \StringTok{"brewer.blues"}\NormalTok{, }\AttributeTok{breaks=}\NormalTok{breaks}\SpecialCharTok{$}\NormalTok{brks),}
+      \CommentTok{\# set the legend}
+      \AttributeTok{fill.legend =} \FunctionTok{tm\_legend}\NormalTok{(}\AttributeTok{title=}\StringTok{"Accomodation count"}\NormalTok{,}
+                              \AttributeTok{title.size=}\FloatTok{0.85}\NormalTok{,}
+                              \AttributeTok{size=}\FloatTok{0.8}\NormalTok{,}
+                              \CommentTok{\# plot outside of the main map}
+                              \CommentTok{\#explained below}
+                              \AttributeTok{position=}\FunctionTok{tm\_pos\_out}\NormalTok{(}\StringTok{"right"}\NormalTok{, }
+                                                  \StringTok{"center"}\NormalTok{,}
+                                                  \AttributeTok{pos.v =} \StringTok{"center"}\NormalTok{)),}
+      \CommentTok{\# all facets share the same legend}
+      \AttributeTok{fill.free =} \ConstantTok{FALSE}\NormalTok{)}\SpecialCharTok{+}
+  \CommentTok{\# make 2 rows for the facets}
+  \FunctionTok{tm\_facets}\NormalTok{(}\AttributeTok{nrow=}\DecValTok{2}\NormalTok{)}
+
+\NormalTok{tm1}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Values have found that are less than the lowest break. They are
+## assigned to the lowest interval
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Week_5_Practical_files/figure-latex/unnamed-chunk-17-1.pdf}}
+
+\textbf{Now for the final map I want to \emph{alter the layout and add a
+compass, scale bar, and north arrow}. Here is how to do that}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"produce final map"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "produce final map"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tm2 }\OtherTok{\textless{}{-}}\NormalTok{ tm1}\SpecialCharTok{+}
+  \FunctionTok{tm\_layout}\NormalTok{(}\AttributeTok{panel.labels=}\FunctionTok{c}\NormalTok{(}\StringTok{"Hotels"}\NormalTok{, }\StringTok{"Airbnb"}\NormalTok{),}
+            \AttributeTok{panel.show =} \ConstantTok{TRUE}
+            \CommentTok{\#panel.label.bg.color = "transparent",}
+\NormalTok{            )}\SpecialCharTok{+}
+  
+  \FunctionTok{tm\_compass}\NormalTok{(}\AttributeTok{type=} \StringTok{"arrow"}\NormalTok{,}
+            \AttributeTok{size=}\FloatTok{1.8}\NormalTok{, }
+            \AttributeTok{position =} \FunctionTok{tm\_pos\_out}\NormalTok{(}\StringTok{"left"}\NormalTok{, }
+                                  \StringTok{"center"}\NormalTok{,}
+                                  \AttributeTok{pos.h=} \SpecialCharTok{{-}}\FloatTok{0.05}\NormalTok{,}
+                                  \AttributeTok{pos.v =}\FloatTok{0.72}\NormalTok{))}\SpecialCharTok{+}
+  \FunctionTok{tm\_scalebar}\NormalTok{(}\AttributeTok{text.size =} \FloatTok{0.7}\NormalTok{,}
+              \AttributeTok{width=}\DecValTok{10}\NormalTok{,}
+              \AttributeTok{breaks=}\FunctionTok{c}\NormalTok{(}\DecValTok{0}\NormalTok{,}\DecValTok{10}\NormalTok{,}\DecValTok{20}\NormalTok{),}
+              \AttributeTok{position =} \FunctionTok{tm\_pos\_out}\NormalTok{(}\StringTok{"left"}\NormalTok{,}
+                                    \StringTok{"center"}\NormalTok{, }
+                                    \AttributeTok{pos.h=}\FloatTok{0.075}\NormalTok{,}
+                                    \AttributeTok{pos.v =} \FloatTok{0.68}\NormalTok{))}\SpecialCharTok{+}
+  \CommentTok{\# we could use tm\_credits to place sub{-}titles like (A) or (B)}
+  \CommentTok{\# on the map.}
+  \FunctionTok{tm\_credits}\NormalTok{(}\StringTok{"(c) OpenStreetMap contrbutors and Air b n b"}\NormalTok{,}
+             \AttributeTok{size=}\FloatTok{0.6}\NormalTok{,}
+             \AttributeTok{position =} \FunctionTok{tm\_pos\_out}\NormalTok{(}\StringTok{"center"}\NormalTok{,}
+                                   \StringTok{"bottom"}\NormalTok{,}
+                                   \AttributeTok{pos.v =} \FloatTok{1.5}\NormalTok{,}
+                                   \AttributeTok{pos.h=}\SpecialCharTok{{-}}\FloatTok{0.02}\NormalTok{))}
+
+\NormalTok{tm2}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Values have found that are less than the lowest break. They are
+## assigned to the lowest interval
+\end{verbatim}
+
+\begin{verbatim}
+## For 'tm_scalebar()', 'breaks' and 'width' are not supposed to be used together; normally, setting the exact width is not needed when breaks have been specified.FALSE
+\end{verbatim}
+
+\pandocbounded{\includegraphics[keepaspectratio]{Week_5_Practical_files/figure-latex/unnamed-chunk-18-1.pdf}}
+
+\textbf{Now I want to save the figure above}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{print}\NormalTok{(}\StringTok{"Save Map"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "Save Map"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{tmap\_save}\NormalTok{(tm2, }\StringTok{"Outputs/1\_facet.png"}\NormalTok{, }\AttributeTok{width =} \DecValTok{8}\NormalTok{, }\AttributeTok{height =} \DecValTok{6}\NormalTok{, }\AttributeTok{units=}\StringTok{"in"}\NormalTok{, }\AttributeTok{dpi =} \DecValTok{300}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Warning: Values have found that are less than the lowest break. They are
+## assigned to the lowest interval
+\end{verbatim}
+
+\begin{verbatim}
+## For 'tm_scalebar()', 'breaks' and 'width' are not supposed to be used together; normally, setting the exact width is not needed when breaks have been specified.FALSE
+\end{verbatim}
+
+\begin{verbatim}
+## Map saved to C:\Users\Owen Hughes\Desktop\CASA\UCL_Work\GIS_Term1\GIS_Git_Projects\Week_5\GIS\Week_5\Outputs\1_facet.png
+\end{verbatim}
+
+\begin{verbatim}
+## Resolution: 2400 by 1800 pixels
+\end{verbatim}
+
+\begin{verbatim}
+## Size: 8 by 6 inches (300 dpi)
+\end{verbatim}
+
+\textbf{Usually for this practical one would add the inset map of the UK
+to show the study area, but that data download was not working so I will
+skip this step this week.}
+
+\end{document}
