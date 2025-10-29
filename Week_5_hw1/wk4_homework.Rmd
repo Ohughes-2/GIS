@@ -92,38 +92,32 @@ print('subset data')
 
 #view(final_data)
 
-countries_list <- c('Australia', 'New Zealand', 'Papua New Guinea', 'Solomon Islands', 'Timor-Leste', 'Indonesia', 'Malaysia', 'Brunei Darussalam') 
-new_final_data <- filter(final_data, COUNTRY %in% countries_list)
+countries_list <- c('Australia', 'New Zealand', 'Papua New Guinea', 'Timor-Leste', 'Indonesia', 'Malaysia') 
+new_final_data <- filter(final_data, COUNTRY %in% countries_list) %>%
+  mutate(
+    Change_level = case_when(
+      difference_in_inequality < -0.07 ~ "High_Gen_Eq_Increase",
+      difference_in_inequality > -0.07 & difference_in_inequality < 0 ~ "General_Gen_Eq_Increase",
+      difference_in_inequality > 0 ~ "High_Gen_Eq_Decrease"
+    )
+  )
   
 view(new_final_data)
 ```
-
 ```{r}
-new_final_data$gii_change_cat <- cut(
-  new_final_data$difference_in_inequality,
-  breaks = 3,
-  labels = c("Low change", "Moderate change", "High change")
-)
-
-view(new_final_data)
-```
-
-```{r}
-library(tmap)
+tmap_mode("view")  # or "view" for interactive
 
 tmap3 <- tm_shape(new_final_data) +
-  tm_polygons(
-    fill = "gii_change_cat",
-    fill.scale = tm_scale(values = c("#3c0008", "#cc7070", "#ff69b4")),
-    fill_alpha = 0.8,
-    fill.legend = tm_legend(title = "[2010–2019] GII Change")
-  ) +
-  tm_title("Oceania/SE Asia: GII Change (3 Categories)") +
-  tm_credits("Source: UN Human Development Reports", position = c("left", "bottom")) +
-  tm_scalebar(position = c("left", "bottom")) +
-  tm_layout(legend.col = 1)
+  tm_polygons("Change_level", 
+              palette = c("High_Gen_Eq_Increase" = "darkgreen",
+                          "General_Gen_Eq_Increase" = "gold",
+                          "High_Gen_Eq_Decrease" = "red"),
+              title = "Change in Gender Equality") +
+  tm_layout(legend.outside = TRUE)
 
 tmap3
-
 ```
+
+
+
 
