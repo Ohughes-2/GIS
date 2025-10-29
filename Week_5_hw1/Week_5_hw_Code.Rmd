@@ -4,3 +4,18 @@ output: html_document
 ---
 
 This is going to be an empty markdown file that served as a way to test the organization of github in R
+
+# Let's Make a plan for the practical session tomorrow!
+
+### Step 1
+__Create a new project linked to the forked repository from Luke's github__
+
+### Step 2
+__Open the markdown file in that project__
+
+### Step 3
+__Copy all of the changes that I made in my own week_5_hw project__
+
+### Step 4
+__Ensure that everything runs correctly and submit a git.pull request__
+
