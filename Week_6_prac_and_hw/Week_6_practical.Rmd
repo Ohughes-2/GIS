@@ -40,6 +40,24 @@ qtm(BoroughMap)
 # Summary Stats
 summary(BoroughMap)
 ```
+Now let's load the blue plaques data that we will use for the analysis in this practical
+```{r}
+BluePlaques <- st_read(here::here("Week_6_prac_and_hw/open_plaques.geojson")) %>%
+  st_transform(.,27700)
 
+summary(BluePlaques)
+
+```
+
+__Now I want to plot the blue plaques on top of the London Boroughs__
+
+```{r}
+tmap_mode("plot")
+
+tm_shape(BoroughMap) +
+  tm_polygons(fill_alpha = 0.5) +
+tm_shape(BluePlaques) +
+  tm_dots(fill = "#57a0d2", size = 0.1)
+```
 
 
