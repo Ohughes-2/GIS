@@ -92,5 +92,44 @@ tm_shape(Lambeth)+
   tm_polygons(fill = "#EAA221", fill_alpha = 0.5)
 ```
 
+Now I want to clip the plaques in Lambeth to the map above and check
+```{r}
+# Clip to Lambeth
+BluePlaquesLam <- BluePlaques[Lambeth,]
+
+# Map to check
+tm_shape(Lambeth) +
+  tm_polygons(fill = "#EAA221", fill_alpha = 0.5)+
+tm_shape(BluePlaquesLam) +
+  tm_dots(fill = "#57a0d2", size = 0.3) # slightly larger dots are easier to see
+
+```
+
+__Final setup for point cloud analysis__
+
+Create a spatstat observation window
+```{r}
+#now set a window as the borough boundary
+window <- as.owin(Lambeth)
+plot(window)
+```
+Spatstat does not work directly with sf objects so let's convert the data to something that spatstat can read properly. 
+```{r}
+#create a sp object
+BluePlaquesLam<- BluePlaquesLam %>%
+  as(., 'Spatial')
+#create a ppp object
+BluePlaquesLam.ppp <- ppp(x=BluePlaquesLam@coords[,1], # grabs lat + long from geometry column
+                          y=BluePlaquesLam@coords[,2],
+                          window=window)
+```
 
 
+Inspect the new spatstat object
+```{r}
+BluePlaquesLam.ppp %>%
+  plot(.,pch=16,cex=0.5, 
+       main="Blue Plaques Lambeth")
+```
+
+__Point Pattern Analysis__
