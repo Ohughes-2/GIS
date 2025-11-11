@@ -19,6 +19,7 @@ library(tmap)
 library(sf)
 library(tmaptools)
 library(tidyverse)
+library(ggplot2)
 ```
 
 
@@ -274,13 +275,93 @@ library(fpc)
 ```
 
 
+```{r}
+#first check the coordinate reference system of the Harrow spatial polygon:
+st_geometry(BoroughMap)
+st_geometry(Lambeth)
+```
 
+DBSCAN requires you to input two parameters: 1. Epsilon - this is the radius within which the algorithm with search for clusters 2. MinPts - this is the minimum number of points that should be considered a cluster
 
+```{r}
+#first extract the points from the spatial points data frame
+BluePlaquesLamPoints <- BluePlaquesLam %>%
+  coordinates(.)%>%
+  as.data.frame()
 
+#now run the dbscan analysis
+db <- BluePlaquesLamPoints %>%
+  fpc::dbscan(.,eps = 1000, MinPts = 4)
 
+#now plot the results
+plot(db, BluePlaquesLamPoints, main = "DBSCAN Output", frame = F)
+plot(Lambeth$geometry, add=T)
+```
+
+What if I wanted to find a more optimal EPS value?
+
+```{r}
+# used to find suitable eps value based on the knee in plot
+# k is no of nearest neighbors used, use min points
+# install.packages("dbscan")
+library(dbscan)
+
+BluePlaquesLamPoints%>%
+  dbscan::kNNdistplot(.,k=4)
+```
+
+Now let's make a much nicer plot for display.
+
+```{r}
+db
+print('-----------------------------------------------------------------------------------------')
+db$cluster
+```
+
+```{r}
+# add this cluster membership info back into our data frame
+BluePlaquesLamPoints<- BluePlaquesLamPoints %>%
+  mutate(dbcluster=db$cluster)
+```
  
+Now we are going to create convex hull polygons (minimum bounding polygons) that surround the clusters. Transforming theses polygons into sf objects will allow them to be visualized more aesthetically in a map.
 
+```{r}
+# convert the data frame to sf
+BluePlaquesLamPoints_sf <- st_as_sf(BluePlaquesLamPoints, 
+                                    coords = c("coords.x1", "coords.x2"), 
+                                    crs = 27700)
 
+# make the convex hulls around the cluster points
+chull_polygons <- BluePlaquesLamPoints_sf %>%
+  # remove any points not in a cluster
+  filter(dbcluster>0)%>%
+  group_by(dbcluster) %>%
+  summarise(geometry = st_combine(geometry)) %>%  # combine points
+  mutate(geometry = st_convex_hull(geometry)) %>% # convex hull
+  st_as_sf()
+```
+
+Now that we have this Convex Hull data, let's make a good looking map to go along.
+
+```{r}
+#install.packages("ggspatial")
+library(ggspatial)
+```
+
+```{r}
+# Create the map
+ggplot() +
+  annotation_map_tile(zoom = 13) +
+  geom_sf(data = BluePlaquesLamPoints_sf, aes(color=dbcluster), size = 3)+
+  geom_sf(data = chull_polygons, aes(fill = dbcluster), 
+          alpha = 0.8, 
+          # remove polygon borders
+          color = NA, 
+          show.legend = FALSE) +
+
+  theme_bw()
+```
 
 
 
