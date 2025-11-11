@@ -2,7 +2,9 @@
 title: "Week_6_Practical"
 author: "Owen Hughes"
 date: "2025-11-11"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 # This week the goal is to explore analysis of point clusters in a number of different ways
