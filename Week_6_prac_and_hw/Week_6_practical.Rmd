@@ -20,3 +20,26 @@ library(sf)
 library(tmaptools)
 ```
 
+
+```{r}
+# Read in the data
+LondonBoroughs <- st_read(here::here("Week_6_prac_and_hw/statistical-gis-boundaries-london/statistical-gis-boundaries-london/ESRI/London_Borough_Excluding_MHW.shp"))
+```
+
+Let's now inspect the LondonBorough data.
+```{r}
+# Quick Map
+library(stringr)
+BoroughMap <- LondonBoroughs %>%
+  dplyr::filter(str_detect(GSS_CODE, "^E09"))%>%
+  st_transform(., 27700)
+
+qtm(BoroughMap)
+```
+```{r}
+# Summary Stats
+summary(BoroughMap)
+```
+
+
+
