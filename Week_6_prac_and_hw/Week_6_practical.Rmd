@@ -1,0 +1,22 @@
+---
+title: "Week_6_Practical"
+author: "Owen Hughes"
+date: "2025-11-11"
+output: html_document
+---
+
+# This week the goal is to explore analysis of point clusters in a number of different ways
+
+__As always the first steps are to load libraries and data__
+
+```{r}
+# Libraries
+# install.packages("spatstat")
+library(spatstat)
+library(here)
+library(sp)
+library(tmap)
+library(sf)
+library(tmaptools)
+```
+
