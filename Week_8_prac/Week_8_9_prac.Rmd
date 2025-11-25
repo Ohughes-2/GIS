@@ -1,0 +1,239 @@
+---
+title: "Week_8_9_prac"
+output: html_document
+---
+
+# Practical Week 8 & 9
+
+## Load in Data
+
+```{r}
+library(tidyverse)
+library(tmap)
+library(plotly)
+library(broom)
+#install.packages("mapview")
+library(mapview)
+library(sf)
+library(sp)
+library(spdep)
+#install.packages('car')
+library(car)
+library(fs)
+library(janitor)
+```
+
+```{r}
+# Read in data
+download.file("https://data.london.gov.uk/download/statistical-gis-boundary-files-london/9ba8c833-6370-4b11-abdc-314aa020d5e0/statistical-gis-boundaries-london.zip",
+              destfile = "statistical-gis-boundaries-london.zip")
+```
+
+```{r}
+# Get the file and extract it
+library(fs)
+listfiles<-dir_info(here::here("Week_8_prac")) %>%
+  dplyr::filter(str_detect(path, ".zip")) %>%
+  dplyr::select(path)%>%
+  pull()%>%
+  #print out the .gz file
+  print()%>%
+  as.character()%>%
+  utils::unzip(exdir=here::here("Week_8_prac"))
+```
+
+```{r}
+#look what is inside the zip
+
+Londonwards<-fs::dir_info(here::here("Week_8_prac", 
+                                 "statistical-gis-boundaries-london", 
+                                 "ESRI"))%>%
+  #$ means exact match
+  dplyr::filter(str_detect(path, 
+                           "London_Ward_CityMerged.shp$"))%>%
+  dplyr::select(path)%>%
+  dplyr::pull()%>%
+  #read in the file in
+  sf::st_read()
+```
+
+```{r}
+#check the data
+qtm(Londonwards)
+```
+
+```{r}
+#read in some attribute data
+LondonWardProfiles <- read_csv("https://data.london.gov.uk/download/f33fb38c-cb37-48e3-8298-84c0d3cc5a6c/772d2d64-e8c6-46cb-86f9-e52b4c7851bc/ward-profiles-excel-version.csv", 
+                               col_names = TRUE, 
+                               locale = locale(encoding = 'Latin1'))
+```
+
+```{r}
+#check all of the columns have been read in correctly
+Datatypelist <- LondonWardProfiles %>% 
+  summarise_all(class) %>%
+  pivot_longer(everything(), 
+               names_to="All_variables", 
+               values_to="Variable_class")
+
+Datatypelist
+```
+
+#### Cleaning the data as you read it in
+
+```{r}
+#We can use readr to deal with the issues in this dataset - which are to do with text values being stored in columns containing numeric values
+
+#read in some data - couple of things here. Read in specifying a load of likely 'n/a' values, also specify Latin1 as encoding as there is a pound sign (£) in one of the column headers - just to make things fun!
+
+LondonWardProfiles <- read_csv("https://data.london.gov.uk/download/ward-profiles-and-atlas/772d2d64-e8c6-46cb-86f9-e52b4c7851bc/ward-profiles-excel-version.csv", 
+                               na = c("", "NA", "n/a"), 
+                               locale = locale(encoding = 'Latin1'), 
+                               col_names = TRUE)
+```
+
+```{r}
+#check all of the columns have been read in correctly
+Datatypelist <- LondonWardProfiles %>% 
+  summarise_all(class) %>%
+  pivot_longer(everything(), 
+               names_to="All_variables", 
+               values_to="Variable_class")
+
+Datatypelist
+```
+
+```{r}
+#merge boundaries and data
+LonWardProfiles <- Londonwards%>%
+  left_join(.,
+            LondonWardProfiles, 
+            by = c("GSS_CODE" = "New code"))
+
+
+#let's map our dependent variable to see if the join has worked:
+tmap_mode("plot")
+qtm(LonWardProfiles, 
+    fill = "Average GCSE capped point scores - 2014", 
+    fill.palette = "oranges")
+```
+
+#### Additional Data
+
+```{r}
+#might be a good idea to see where the secondary schools are in London too
+london_schools <- read_csv("https://data.london.gov.uk/download/146392df-b051-42ad-b8ec-454e440f0f8b/57046151-39a0-45d9-8dc0-27ea7fd02de8/all_schools_xy_2016.csv")
+
+#from the coordinate values stored in the x and y columns, which look like they are latitude and longitude values, create a new points dataset
+lon_schools_sf <- st_as_sf(london_schools, 
+                           coords = c("x","y"), 
+                           crs = 4326)
+
+lond_sec_schools_sf <- lon_schools_sf %>%
+  filter(PHASE=="Secondary")
+
+tmap_mode("plot")
+qtm(lond_sec_schools_sf, size=0.2)
+```
+
+## Analysing GCSE exam performance - testing a research hypothesis
+
+To explore the factors that might influence GCSE exam performance in London, we are going to run a series of different regression models. A regression model is simply the expression of a linear relationship between our outcome variable (Average GCSE score in each Ward in London) and another variable or several variables that might explain this outcome.
+
+### Research Question and Hypothesis
+
+Examining the spatial distribution of GSCE point scores in the map above, it is clear that there is variation across the city. My research question is:
+
+**What are the factors that might lead to variation in Average GCSE point scores across the city?**
+
+My research hypothesis that I am going to test is that there are other observable factors occurring in Wards in London that might affect the average GCSE scores of students living in those areas.
+
+In inferential statistics, we cannot definitively prove a hypothesis is true, but we can seek to *disprove* that there is absolutely nothing of interest occurring or no association between variables. The *null hypothesis* that I am going to test empirically with some models is that there is *no* relationship between exam scores and other observed variables across London.
+
+### Regression Basics
+
+```{r}
+q <- qplot(x = `Unauthorised Absence in All Schools (%) - 2013`, 
+           y = `Average GCSE capped point scores - 2014`, 
+           data=LonWardProfiles)
+```
+
+```{r}
+#plot with a regression line - note, I've added some jitter here as the x-scale is rounded
+q + stat_smooth(method="lm", se=FALSE, size=1) + 
+  geom_jitter()
+```
+
+### Running a Regression Model in R
+
+```{r}
+#run the linear regression model and store its outputs in an object called model1
+Regressiondata<- LonWardProfiles%>%
+  clean_names()%>%
+  dplyr::select(average_gcse_capped_point_scores_2014, 
+                unauthorised_absence_in_all_schools_percent_2013)
+
+#now model
+model1 <- Regressiondata %>%
+  lm(average_gcse_capped_point_scores_2014 ~
+               unauthorised_absence_in_all_schools_percent_2013,
+     data=.)
+```
+
+```{r}
+#show the summary of those outputs
+summary(model1)
+```
+
+### Broom
+
+```{r}
+library(broom)
+tidy(model1)
+```
+
+We can also use `glance()` from `broom` to get a bit more summary information, such as r2 and the adjusted r-squared value
+
+```{r}
+glance(model1)
+```
+
+But wait? Didn’t we try to model our GCSE values based on our unauthorised absence variable? Can we see those predictions for each point, yes, yes we can…with the `tidypredict_to_column()` function from `tidypredict`, which adds the `fit` column in the following code.
+
+```{r}
+#install.packages('tidypredict')
+library(tidypredict)
+Regressiondata %>%
+  tidypredict_to_column(model1)
+```
+
+### Tidymodels
+
+Before we move on it’s worth pointing out that a new iteration of modelling is being developed through [`tidymodels`](https://www.tidymodels.org/)…the benefit of this is that we can easily change the modelling method or as they term it…`engine`…(e.g. to [RandomForest](https://www.rebeccabarter.com/blog/2020-03-25_machine_learning/))
+
+```{r}
+#install.packages("tidymodels")
+library(tidymodels)
+```
+
+```{r}
+# set the model
+lm_mod <- linear_reg()
+
+# fit the model
+lm_fit <- 
+  lm_mod %>% 
+  fit(average_gcse_capped_point_scores_2014 ~
+               unauthorised_absence_in_all_schools_percent_2013,
+     data=Regressiondata)
+
+# we cover tidy and glance in a minute...
+tidy(lm_fit)
+```
+
+```{r}
+glance(lm_fit)
+```
+
+### Bootstrap Resampling. Cont. 
