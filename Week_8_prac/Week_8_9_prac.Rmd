@@ -137,7 +137,7 @@ tmap_mode("plot")
 qtm(lond_sec_schools_sf, size=0.2)
 ```
 
-## Analysing GCSE exam performance - testing a research hypothesis
+## Analyzing GCSE exam performance - testing a research hypothesis
 
 To explore the factors that might influence GCSE exam performance in London, we are going to run a series of different regression models. A regression model is simply the expression of a linear relationship between our outcome variable (Average GCSE score in each Ward in London) and another variable or several variables that might explain this outcome.
 
@@ -199,7 +199,7 @@ We can also use `glance()` from `broom` to get a bit more summary informatio
 glance(model1)
 ```
 
-But wait? Didn’t we try to model our GCSE values based on our unauthorised absence variable? Can we see those predictions for each point, yes, yes we can…with the `tidypredict_to_column()` function from `tidypredict`, which adds the `fit` column in the following code.
+But wait? Didn’t we try to model our GCSE values based on our unauthorized absence variable? Can we see those predictions for each point, yes, yes we can…with the `tidypredict_to_column()` function from `tidypredict`, which adds the `fit` column in the following code.
 
 ```{r}
 #install.packages('tidypredict')
@@ -236,4 +236,225 @@ tidy(lm_fit)
 glance(lm_fit)
 ```
 
-### Bootstrap Resampling. Cont. 
+### Bootstrap Resampling. Cont.
+
+If we only fit our model once, how can we be confident about that estimate? Bootstrap resampling is where we take the original dataset and select random data points from within it, but in order to keep it the same size as the original dataset some records are duplicated. This is known as bootstrap resampling by replacement. We used to briefly cover this within this practical but have recently removed it. If you wish to explore it then consult the [bootstrap resampling section from previous years](https://andrewmaclachlan.github.io/CASA0005repo_20202021/gwr-and-spatially-lagged-regression.html#bootstrap-resampling), but this is not a requirement and only for interest.
+
+### Variables
+
+#### How do I select variables
+
+**Either with logic and reasoning (e.g. in the exam),** with the support of academic literature or methods such as [best subset regression, k-fold cross validation](http://www.sthda.com/english/articles/37-model-selection-essentials-in-r/155-best-subsets-regression-essentials-in-r/) or [gradient descent](https://mlu-explain.github.io/linear-regression/). It does not form part of this module. Other regression methods such as [Ridge, LASSO and elastic net regression](https://andrewmaclachlan.github.io/CASA0005repo_20202021/advanced-r-maup-and-more-regression.html#advanced-regression) can reduce the influence of variables that are not useful in the model. But again, this is beyond the scope of this module.
+
+### Assumptions Underpinning Linear Regression
+
+#### Assumption 1 - There is a linear relationship between the dependent and independent variables
+
+Do this by plotting the distribution (histogram) of the variables being tested
+
+```{r}
+ggplot(LonWardProfiles, aes(x=`Average GCSE capped point scores - 2014`)) + 
+  geom_histogram(aes(y = ..density..),
+                 binwidth = 5) + 
+  geom_density(colour="red", 
+               size=1, 
+               adjust=1)
+```
+
+```{r}
+ggplot(LonWardProfiles, aes(x=`Unauthorised Absence in All Schools (%) - 2013`)) +
+  geom_histogram(aes(y = ..density..),
+                 binwidth = 0.1) + 
+  geom_density(colour="red",
+               size=1, 
+               adjust=1)
+```
+
+The two plots above are sufficiently normal, let's compare to a variable that isn't so normal.
+
+```{r}
+library(ggplot2)
+
+# from 21/10 there is an error on the website with 
+# median_house_price_2014 being called median_house_price<c2>2014
+# this was corrected around 23/11 but can be corrected with rename..
+
+LonWardProfiles <- LonWardProfiles %>%
+  #try removing this line to see if it works...
+  dplyr::rename(median_house_price_2014 =`Median House Price (£) - 2014`)%>%
+  janitor::clean_names()
+
+ggplot(LonWardProfiles, aes(x=median_house_price_2014)) + 
+  geom_histogram()
+```
+
+This is what we get if we plot the raw house prices vs the GCSE scores
+
+```{r}
+qplot(x = median_house_price_2014, 
+      y = average_gcse_capped_point_scores_2014, 
+      data=LonWardProfiles)
+```
+
+Variable Transformations
+
+Sometimes, like the case of the house prices, one can take the log of the variable to change its distribution to be normal.
+
+```{r}
+ggplot(LonWardProfiles, aes(x=log(median_house_price_2014))) + 
+  geom_histogram()
+```
+
+As can be seen, the distribution is more normal than it was, but still not perfect.
+
+There are several other possible transformations, the symbox function allows us to investigate several at the same time.
+
+```{r}
+symbox(~median_house_price_2014, 
+       LonWardProfiles, 
+       na.rm=T,
+       powers=seq(-3,3,by=.5))
+```
+
+It looks like a power of -1 should be the most normal
+
+```{r}
+ggplot(LonWardProfiles, aes(x=(median_house_price_2014)^-1)) + 
+  geom_histogram()
+```
+
+Here is the comparison scatter plot of the power = -1 with the GCSE scores
+
+```{r}
+qplot(x = (median_house_price_2014)^-1, 
+      y = average_gcse_capped_point_scores_2014,
+      data=LonWardProfiles)
+```
+
+And here is the scatter plot with the log transformations
+
+```{r}
+qplot(x = log(median_house_price_2014), 
+      y = average_gcse_capped_point_scores_2014, 
+      data=LonWardProfiles)
+```
+
+These seem to have the opposite relationship with GCSE scores, so the way we analyze these relationships depends on the type of transformation.
+
+#### Assumption 2 - The residuals in your model should be normally distributed
+
+This assumption is easy to check. When we ran our Model1 earlier, one of the outputs stored in our Model 1 object is the residual value for each case (Ward) in your data set. We can access these values using `augment()` from `broom` which will add model output to the original GCSE data…
+
+We can plot these as a histogram and see if there is a normal distribution:
+
+```{r}
+#save the residuals into your dataframe
+
+model_data <- model1 %>%
+  augment(., Regressiondata)
+
+#plot residuals
+model_data%>%
+dplyr::select(.resid)%>%
+  pull()%>%
+  qplot()+ 
+  geom_histogram() 
+```
+
+Looks pretty normal to me
+
+#### Assumption 3 - No Multicolinearity in the independent variables
+
+Now, the regression model we have be experimenting with so far is a simple bivariate (two variable) model. One of the nice things about regression modelling is while we can only easily visualise linear relationships in a two (or maximum 3) dimension scatter plot, mathematically, we can have as many dimensions / variables as we like.
+
+As such, we could extend model 1 into a **multiple regression** model by adding some more explanatory variables that we think could affect GSCE scores. Let’s try the log or \^-1 transformed house price variable from earlier (the rationale being that higher house prices indicate more affluence and therefore, potentially, more engagement with education):
+
+```{r}
+Regressiondata2<- LonWardProfiles%>%
+  clean_names()%>%
+  dplyr::select(average_gcse_capped_point_scores_2014,
+         unauthorised_absence_in_all_schools_percent_2013,
+         median_house_price_2014)
+
+model2 <- lm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014), data = Regressiondata2)
+
+#show the summary of those outputs
+tidy(model2)
+```
+
+```{r}
+glance(model2)
+```
+
+```{r}
+#and for future use, write the residuals out
+model_data2 <- model2 %>%
+  augment(., Regressiondata2)
+
+# also add them to the shapelayer
+LonWardProfiles <- LonWardProfiles %>%
+  mutate(model2resids = residuals(model2))
+```
+
+We can see that both variables are significant, but let's check if they are co-linear
+
+```{r}
+#install.packages('corrr')
+library(corrr)
+
+Correlation <- LonWardProfiles %>%
+  st_drop_geometry()%>%
+  dplyr::select(average_gcse_capped_point_scores_2014,
+         unauthorised_absence_in_all_schools_percent_2013,
+         median_house_price_2014) %>%
+  mutate(median_house_price_2014 =log(median_house_price_2014))%>%
+    correlate() %>%
+  # just focus on GCSE and house prices
+  focus(-average_gcse_capped_point_scores_2014, mirror = TRUE) 
+
+
+#visualise the correlation matrix
+rplot(Correlation)
+```
+
+We can see that these two have relatively low colinearity
+
+**Variance Inflation Factor** (VIF) is another way to check multicolinearity
+
+```{r}
+vif(model2)
+```
+
+If we wanted to check this for several more variables we could make a correlation matrix.
+
+```{r}
+position <- c(10:74)
+
+Correlation_all<- LonWardProfiles %>%
+  st_drop_geometry()%>%
+  dplyr::select(position)%>%
+    correlate()
+```
+
+```{r}
+rplot(Correlation_all)
+```
+
+#### Assumption 4 - Homoscedasticity
+
+Homoscedasticity means that the errors/residuals in the model exhibit constant / homogenous variance, if they don’t, then we would say that there is hetroscedasticity present. Why does this matter? Andy Field does a much better job of explaining this in [discovering statistics](https://www.discoveringstatistics.com/tag/homoscedasticity/) — but essentially, if your errors do not have constant variance, then your parameter estimates could be wrong, as could the estimates of their significance.
+
+The best way to check for homo/hetroscedasticity is to plot the residuals in the model against the predicted values. We are looking for a cloud of points with no apparent patterning to them
+
+```{r}
+#print some model diagnositcs. 
+par(mfrow=c(2,2))    #plot to 2 by 2 array
+plot(model2)
+```
+
+```{r}
+library(performance)
+
+check_model(model2, check="all")
+```
