@@ -571,8 +571,128 @@ Queen
 Nearest_neighbour
 ```
 
-Observing the Moran’s I statistic for both Queen’s case neighbours and k-nearest neighbours of 4, we can see that the Moran’s I statistic is somewhere between 0.27 and 0.29. Remembering that Moran’s I ranges from between -1 and +1 (0 indicating no spatial autocorrelation) we can conclude that there is some weak to moderate spatial autocorrelation in our residuals.
+Observing the Moran’s I statistic for both Queen’s case neighbors and k-nearest neighbors of 4, we can see that the Moran’s I statistic is somewhere between 0.27 and 0.29. Remembering that Moran’s I ranges from between -1 and +1 (0 indicating no spatial autocorrelation) we can conclude that there is some weak to moderate spatial autocorrelation in our residuals.
 
 This means that despite passing most of the assumptions of linear regression, we could have a situation here where the presence of some spatial autocorrelation could be leading to biased estimates of our parameters and significance values.
 
 ### Spatial Regression Models
+
+#### Lag Dependent Model
+
+```{r}
+#Original Model
+model2 <- lm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014), data = LonWardProfiles)
+
+tidy(model2)
+```
+
+Queen's Case Lag –\> spatially lagged
+
+```{r}
+#install.packages('spatialreg')
+library(spatialreg)
+
+slag_dv_model2_queen <- lagsarlm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014), 
+               data = LonWardProfiles, 
+               nb2listw(LWard_nb, style="C"), 
+               method = "eigen")
+
+#what do the outputs show?
+tidy(slag_dv_model2_queen)
+```
+
+```{r}
+#glance() gives model stats but this need something produced from a linear model
+#here we have used lagsarlm()
+glance(slag_dv_model2_queen)
+```
+
+```{r}
+t<-summary(slag_dv_model2_queen)
+
+sum(t$residuals)
+```
+
+```{r}
+#install.packages('lmtest')
+library(lmtest)
+lrtest(slag_dv_model2_queen, model2)
+```
+
+```{r}
+# weight list is just the code from the lagsarlm
+weight_list<-nb2listw(LWard_knn, style="C")
+
+imp <- impacts(slag_dv_model2_queen, listw=weight_list)
+
+imp
+```
+
+Now it is appropriate to compare these coefficients to the OLS outputs…**however** if you have a very large matrix this might not work, instead a sparse matrix that uses approximation methods (see Solymosi and Medina (2022) and within that resource, Lesage and Pace 2009). This is beyond the scope of the content here, but essentially this makes the method faster on larger data…but only row standardised is permitted here…
+
+```{r}
+slag_dv_model2_queen_row <- lagsarlm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014), 
+               data = LonWardProfiles, 
+               nb2listw(LWard_nb, style="W"), 
+               method = "eigen")
+
+
+W <- as(weight_list, "CsparseMatrix")
+
+trMatc <- trW(W, type="mult")
+trMC <- trW(W, type="MC")
+
+imp2 <- impacts(slag_dv_model2_queen_row, tr=trMatc, R=200)
+
+imp3 <- impacts(slag_dv_model2_queen_row, tr=trMC, R=200)
+
+imp2
+```
+
+```{r}
+imp3
+```
+
+We can also get the p-values (where an R is set, this is the number of simulations to use)…from the sparse computation
+
+```{r}
+sum <- summary(imp2,  zstats=TRUE, short=TRUE)
+
+sum
+```
+
+KNN Case Lag –\> queens case
+
+```{r}
+#run a spatially lagged regression model
+slag_dv_model2_knn4 <- lagsarlm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014), 
+               data = LonWardProfiles, 
+               nb2listw(LWard_knn, 
+                        style="C"), 
+               method = "eigen")
+
+#what do the outputs show?
+tidy(slag_dv_model2_knn4)
+```
+
+We can also now check that the residuals from the spatially lagged model are now no-longer exhibiting spatial autocorrelation:
+
+```{r}
+#write out the residuals
+
+LonWardProfiles <- LonWardProfiles %>%
+  mutate(slag_dv_model2_knn_resids = residuals(slag_dv_model2_knn4))
+
+KNN4Moran <- LonWardProfiles %>%
+  st_drop_geometry()%>%
+  dplyr::select(slag_dv_model2_knn_resids)%>%
+  pull()%>%
+  moran.test(., Lward.knn_4_weight)%>%
+  tidy()
+
+KNN4Moran
+```
