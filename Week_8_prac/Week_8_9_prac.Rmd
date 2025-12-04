@@ -696,3 +696,203 @@ KNN4Moran <- LonWardProfiles %>%
 
 KNN4Moran
 ```
+
+#### The Spatial Error Mode
+
+```{r}
+sem_model1 <- errorsarlm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014), 
+               data = LonWardProfiles,
+               nb2listw(LWard_knn, style="C"), 
+               method = "eigen")
+
+tidy(sem_model1)
+```
+
+#### Key advice
+
+Usually you might run a **lag** model when you have an idea of what is causing the spatial autocorrelation in the dependent variable and an **error** model when you aren’t sure what might be missing. However, you can also use a more scientific method - the Lagrange Multiplier test.
+
+But! recall from a few weeks ago when I made a big deal of type of standardisation for the spatial weight matrix? This test **expects** row standardisation.
+
+The Lagrange multiple tests are within the function `lm.LMtests` from the package `spdep`:
+
+-   `LMerr` is the spatial error model test
+
+-   `LMlag` is the lagged test
+
+With each also having a robust form, being robust to insensitivities to changes (e.g. outliers, non-normality).
+
+```{r}
+library(spdep)
+
+Lward.queens_weight_ROW <- LWard_nb %>%
+  nb2listw(., style="W")
+
+lm.LMtests(model2, Lward.queens_weight_ROW, test = c("LMerr","LMlag","RLMerr","RLMlag","SARMA"))
+```
+
+#### Which model to use
+
+Usually you will run OLS regression first then look for spatial autocorrelation of the residuals (Moran’s I).
+
+Once at this stage you need to make a decision about the model:
+
+-   Is it a global model (error / lag) or a local model (GWR)?
+
+-   Can a single model (error/lag) be fitted to the study area?
+
+-   Is the spatial autocorrelation a problem (error) or showing local trends (GWR)?
+
+Of course you could do a OLS, spatial lag and GWR as long as they all contribute something to your analysis.
+
+#### More data
+
+We will now read in some extra data which we will use shortly
+
+```{r}
+extradata <- read_csv("https://www.dropbox.com/s/qay9q1jwpffxcqj/LondonAdditionalDataFixed.csv?raw=1")
+
+#add the extra data too
+LonWardProfiles <- LonWardProfiles%>%
+  left_join(., 
+            extradata, 
+            by = c("gss_code" = "Wardcode"))%>%
+  clean_names()
+
+#print some of the column names
+LonWardProfiles%>%
+  names()%>%
+  tail(., n=10)
+```
+
+####  Extending your regression model - Dummy Variables
+
+```{r}
+p <- ggplot(LonWardProfiles, 
+            aes(x=unauth_absence_schools11, 
+                y=average_gcse_capped_point_scores_2014))
+p + geom_point(aes(colour = inner_outer)) 
+```
+
+```{r}
+#first, let's make sure R is reading our InnerOuter variable as a factor
+#see what it is at the moment...
+
+Datatypelist <- LonWardProfiles %>%
+  st_drop_geometry%>% 
+#summarise_all only works with .tbl now (not sf) so we   drop geometry to check  
+  summarise_all(class)%>%
+  pivot_longer(everything(), 
+             names_to="All_variables", 
+             values_to="Variable_class")
+
+Datatypelist
+```
+
+```{r}
+# change to factor
+
+LonWardProfiles<- LonWardProfiles %>%
+  mutate(inner_outer=as.factor(inner_outer))
+
+#now run the model
+model3 <- lm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014) + 
+               inner_outer, 
+             data = LonWardProfiles)
+ 
+tidy(model3)
+```
+
+```{r}
+contrasts(LonWardProfiles$inner_outer)
+```
+
+Here's how to change the control dummy variable
+
+```{r}
+LonWardProfiles <- LonWardProfiles %>%
+  mutate(inner_outer = relevel(inner_outer, 
+                               ref="Outer"))
+
+model3 <- lm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+               log(median_house_price_2014) + 
+               inner_outer,
+             data = LonWardProfiles)
+
+tidy(model3)
+```
+
+## Task 3 - Spatial Non-stationarity and Geographically Weighted Regression Models (GWR)
+
+Here is a complete model
+
+```{r}
+#select some variables from the data file
+myvars <- LonWardProfiles %>%
+  dplyr::select(average_gcse_capped_point_scores_2014,
+         unauthorised_absence_in_all_schools_percent_2013,
+         median_house_price_2014,
+         rate_of_job_seekers_allowance_jsa_claimants_2015,
+         percent_with_level_4_qualifications_and_above_2011,
+         inner_outer)
+
+#check their correlations are OK
+Correlation_myvars <- myvars %>%
+  st_drop_geometry()%>%
+  dplyr::select(-inner_outer)%>%
+  correlate()
+
+#run a final OLS model
+model_final <- lm(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+                    log(median_house_price_2014) + 
+                    inner_outer + 
+                    rate_of_job_seekers_allowance_jsa_claimants_2015 +
+                    percent_with_level_4_qualifications_and_above_2011, 
+                  data = myvars)
+
+tidy(model_final)
+```
+
+```{r}
+LonWardProfiles <- LonWardProfiles %>%
+  mutate(model_final_res = residuals(model_final))
+
+par(mfrow=c(2,2))
+plot(model_final)
+```
+
+```{r}
+qtm(LonWardProfiles, fill = "model_final_res")
+```
+
+```{r}
+final_model_Moran <- LonWardProfiles %>%
+  st_drop_geometry()%>%
+  dplyr::select(model_final_res)%>%
+  pull()%>%
+  moran.test(., Lward.knn_4_weight)%>%
+  tidy()
+
+final_model_Moran
+```
+
+```{r}
+#install.packages('spgwr')
+library(spgwr)
+
+coordsW2 <- st_coordinates(coordsW)
+
+LonWardProfiles2 <- cbind(LonWardProfiles,coordsW2)
+
+GWRbandwidth <- gwr.sel(average_gcse_capped_point_scores_2014 ~ unauthorised_absence_in_all_schools_percent_2013 + 
+                    log(median_house_price_2014) + 
+                    inner_outer + 
+                    rate_of_job_seekers_allowance_jsa_claimants_2015 +
+                    percent_with_level_4_qualifications_and_above_2011, 
+                    data = LonWardProfiles2, 
+                    coords=cbind(LonWardProfiles2$X, 
+                                 LonWardProfiles2$Y),
+                  adapt=T)
+```
