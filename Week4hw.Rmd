@@ -150,4 +150,34 @@ gen_ineq_tmap <- tm_shape(gen_ineq_paices2) +
 
 gen_ineq_tmap
 ```
+HW5 Author: Nathaniel H 
+
+Map where darker blue is greater positive change in GII between 2010 and 2019. Redder is negative. White is no change
+```{r}
+tm1 <- tm_shape(gen_ineq_paices2) + 
+  tm_polygons(fill ="difference",
+              col = "black", 
+              lwd =0.25,
+              lty="solid",
+              fill.chart = tm_chart_violin(),
+              # above this was the same as before
+              fill.scale = tm_scale_intervals(
+                values="brewer.Rd_Bu",
+                n=10,
+                style="jenks"))
+tm1
+```
+Dear Owen,
+
+I liked your notes a lot while i ran your code (it was entertaining and informative). Your code ran well and I liked your maps (it was all very clear).
+
+My only tips would be that you do not need to print every comment/explanation. There are two ways to write comments in R markdown:
+1) write normal text like this (no quotes no hashtags) between code blocks 
+2) use one # to create a comment within the code block.
+
+Printing the comments means that when someone runs your code it will print to the screen, which uses (albeit very little) compute power. 
+
+I really liked your code and explanations, that is just the one small change i would suggest. Andy can probably explain it better than me.
+
+Nathaniel H
 
